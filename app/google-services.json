@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "108394472833",
+    "firebase_url": "https://photobucket-2cd6a.firebaseio.com",
+    "project_id": "photobucket-2cd6a",
+    "storage_bucket": "photobucket-2cd6a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:108394472833:android:689f42b1f3ed937c",
+        "android_client_info": {
+          "package_name": "edu.rosehulman.cuiy1.photobucket"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "108394472833-p871imrkk7ab1qtm1gmd3svr2clemmgs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBT-MO1BBJQNT8gd4-XegJMdmsKk7SUUTU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
