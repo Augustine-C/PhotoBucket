@@ -1,9 +1,10 @@
 package edu.rosehulman.cuiy1.photobucket
 
 import android.os.Bundle
-import android.support.design.widget.Snackbar
+import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -13,23 +14,30 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_edit_dialog.view.*
 
-class MainActivity : AppCompatActivity(), PicList.OnPicSelectedListener{
+class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
 
 
     private lateinit var adapter : PiclistAdapter
-    private val picList = PicList()
     private val picListRef = FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION)
+    private lateinit var picListFragment: Fragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        val ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.fragment_holder,picList)
-        ft.commit()
+
+        if(savedInstanceState ==null) {
+            picListFragment = PicListFragment()
+            val ft = supportFragmentManager.beginTransaction()
+            ft.replace(R.id.fragment_holder, picListFragment)
+            fab.systemUiVisibility = View.VISIBLE
+            ft.commit()
+        }
         fab.setOnClickListener {_ ->
+            Log.d("!!!","add clicked")
             showAddDialog()
         }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -56,7 +64,6 @@ class MainActivity : AppCompatActivity(), PicList.OnPicSelectedListener{
     }
 
     fun showAddDialog() {
-        //TODO
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Add a pic")
         val view = LayoutInflater.from(this).inflate(R.layout.add_edit_dialog,null,false)
@@ -64,7 +71,10 @@ class MainActivity : AppCompatActivity(), PicList.OnPicSelectedListener{
 
         builder.setPositiveButton(android.R.string.ok) { _, _ ->
             val title = view.add_dialog_pic_title.text.toString()
-            val url = view.add_dialog_url.text.toString()
+            var url = view.add_dialog_url.text.toString()
+            if(url == ""){
+                url = Utils.randomImageUrl()
+            }
             picListRef.add(Pic(title,url))
         }
         builder.setNegativeButton(android.R.string.cancel,null)

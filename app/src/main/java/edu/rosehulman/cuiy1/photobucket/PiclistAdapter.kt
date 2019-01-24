@@ -8,15 +8,20 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.QuerySnapshot
-import edu.rosehulman.cuiy1.photobucket.PicListWrapper.picList
+//import edu.rosehulman.cuiy1.photobucket.PicListWrapper.picList
+//import edu.rosehulman.cuiy1.photobucket.PicListWrapper.picListRef
 import kotlinx.android.synthetic.main.add_edit_dialog.view.*
 
 class PiclistAdapter(
     val context : Context,
-    val listener : PicList.OnPicSelectedListener?): RecyclerView.Adapter<PicViewHolder>() {
-    private var picListRef = FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION)
-//    private var picList = ArrayList<Pic>()
+    val listener : PicListFragment.OnPicSelectedListener?): RecyclerView.Adapter<PicViewHolder>()
+{
+
+    lateinit var registration: ListenerRegistration
+    var picList = ArrayList<Pic>()
+    var picListRef = FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION)
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PicViewHolder {
@@ -24,33 +29,46 @@ class PiclistAdapter(
         return PicViewHolder(view,this)
     }
 
-    fun addSnapshotListener(){
-        picListRef
+    fun addSnapshotListener() {
+        Log.d("!!!", "add snapshotlistener ${picList}")
+//        PicListWrapper.picList = ArrayList()
+        registration = picListRef
             .orderBy("timestamp")
             .addSnapshotListener{snapshot : QuerySnapshot?, firebaseFirestoreException ->
                 if(firebaseFirestoreException != null){
-                    Log.d(Constants.TAG, "Firebase Error: $firebaseFirestoreException")
+                    Log.w(Constants.TAG, "Firebase Error: $firebaseFirestoreException")
                     return@addSnapshotListener
                 }
                 processSnapshot(snapshot!!)
+                Log.d("!!!", "get new snapshot ${picList} ")
             }
+//        Log.d("!!!", "add snapshotlistener ${PicListWrapper.picList} ${PicListWrapper.picList[0].id}")
     }
+
+    fun removeSnapshotListener(){
+        Log.d("!!!", "Remove snapshotlistener")
+        registration.remove()
+    }
+
 
     private fun processSnapshot(snapshot: QuerySnapshot) {
         for(documentChange in snapshot.documentChanges){
             val pic = Pic.fromSnapshot(documentChange.document)
             when (documentChange.type){
                 DocumentChange.Type.ADDED -> {
+                    Log.d("!!!", "ADDED")
                     picList.add(0,pic)
                     notifyItemInserted(0)
                 }
                 DocumentChange.Type.REMOVED -> {
-                    val pos = picList.indexOf(pic)
+                    Log.d("!!!", "REMOVE ${pic.id}")
+                    val pos = picList.indexOfFirst { it.id == pic.id }
                     picList.removeAt(pos)
                     notifyItemRemoved(pos)
                 }
                 DocumentChange.Type.MODIFIED -> {
-                    val pos = picList.indexOfFirst { pic.id == it.id }
+                    val pos = picList.indexOfFirst { it.id == pic.id }
+                    Log.d("!!!","MODIFY"+pos.toString())
                     picList[pos] = pic
                     notifyItemChanged(pos)
                 }
@@ -69,7 +87,7 @@ class PiclistAdapter(
 
     fun showEditDialog(pos : Int) {
         val builder = AlertDialog.Builder(context)
-        builder.setTitle("Add a pic")
+        builder.setTitle("Edit a pic")
         val view = LayoutInflater.from(context).inflate(R.layout.add_edit_dialog,null,false)
         builder.setView(view)
         view.add_dialog_pic_title.setText(picList[pos].name)
@@ -88,16 +106,17 @@ class PiclistAdapter(
         builder.create().show()
     }
 
-    private fun remove(pos : Int){
+    fun remove(pos : Int){
         picListRef.document(picList[pos].id).delete()
     }
 
 
-    private fun edit(pos: Int, title: String, url: String) {
+    fun edit(pos: Int, title: String, url: String) {
+        Log.d("!!!", "edit call")
         val temp = picList[pos].copy()
         temp.name = title
-        temp.url = url
-        picListRef.document(picList[pos].id).set(picList[pos])
+        temp.url=url
+        picListRef.document(picList[pos].id).set(temp)
     }
 
 
@@ -106,7 +125,7 @@ class PiclistAdapter(
     }
 
     fun selectPic(pos : Int){
-        val id = PicListWrapper.picList[pos].id
+        val id = picList[pos].id
         listener?.onPicSelected(id)
     }
 

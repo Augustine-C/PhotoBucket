@@ -1,12 +1,15 @@
 package edu.rosehulman.cuiy1.photobucket
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_pic_detail.view.*
 
@@ -23,16 +26,22 @@ private const val ARG_ID = "ARG_ID"
  * create an instance of this fragment.
  *
  */
-class PicDetail : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var pic : Pic? = null
+class PicDetail : Fragment(),GetImageTask.ImageConsumer {
 
 
+    private var id : String? = null
+    private lateinit var rootView : View
+
+
+
+    override fun onImageLoaded(pic: Bitmap?) {
+        Log.d(Constants.TAG,"bitmap: " + pic.toString())
+        rootView.photo.setImageBitmap(pic)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {bundle->
-            val id = bundle.getString(ARG_ID)
-            pic = PicListWrapper.picList.first {it.id == id}
+            id = bundle.getString(ARG_ID)
         }
     }
 
@@ -40,29 +49,17 @@ class PicDetail : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_pic_detail, container, false)
-        view.title.text = pic?.name
-        return view
+        rootView = inflater.inflate(R.layout.fragment_pic_detail, container, false)
+        FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION).document(id!!).get().addOnSuccessListener{
+                documentSnapshot: DocumentSnapshot ->
+            val pic = Pic.fromSnapshot(documentSnapshot)
+            Log.d("!!!", pic.toString())
+            rootView.title.text = pic.name
+            GetImageTask(this).execute(pic.url)
+        }
+
+        return rootView
     }
-
-
-
-//
-//    /**
-//     * This interface must be implemented by activities that contain this
-//     * fragment to allow an interaction in this fragment to be communicated
-//     * to the activity and potentially other fragments contained in that
-//     * activity.
-//     *
-//     *
-//     * See the Android Training lesson [Communicating with Other Fragments]
-//     * (http://developer.android.com/training/basics/fragments/communicating.html)
-//     * for more information.
-//     */
-//    interface OnFragmentInteractionListener {
-//        // TODO: Update argument type and name
-//        fun onFragmentInteraction(uri: Uri)
-//    }
 
     companion object {
         /**
