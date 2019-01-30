@@ -7,4 +7,5 @@
     <string name="pic_url_hint">enter the url for you pic</string>
     <string name="edit_title">edit title</string>
     <string name="show_all">show all</string>
+    <string name="rosefire_login">ROSEFIRE LOGIN</string>
 </resources>

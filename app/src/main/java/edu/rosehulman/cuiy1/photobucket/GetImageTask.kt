@@ -15,16 +15,16 @@ class GetImageTask(private var imageConsumer: ImageConsumer) : AsyncTask<String,
         try {
             val url = URL(urlStrings[0])
             Log.d(Constants.TAG, "Url: $url")
-        } catch (e:Exception){
-            Log.e(Constants.TAG,"Exception: URL ISSUE")
+        } catch (e: Exception) {
+            Log.e(Constants.TAG, "Exception: URL ISSUE")
         }
         return try {
             val inStream = java.net.URL(urlStrings[0]).openStream()
             val bitmap = BitmapFactory.decodeStream(inStream)
             Log.d(Constants.TAG, "bitmap: ${bitmap.toString()}")
             bitmap
-        } catch(e: Exception){
-            Log.e(Constants.TAG,"Exception:" + e.toString())
+        } catch (e: Exception) {
+            Log.e(Constants.TAG, "Exception:" + e.toString())
             null
         }
     }

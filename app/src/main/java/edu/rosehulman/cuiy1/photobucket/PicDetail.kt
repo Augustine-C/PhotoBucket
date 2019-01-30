@@ -20,6 +20,7 @@ import kotlinx.android.synthetic.main.fragment_pic_detail.view.*
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_ID = "ARG_ID"
+
 /**
  * A simple [Fragment] subclass.
  * Activities that contain this fragment must implement the
@@ -29,21 +30,21 @@ private const val ARG_ID = "ARG_ID"
  * create an instance of this fragment.
  *
  */
-class PicDetail : Fragment(),GetImageTask.ImageConsumer {
+class PicDetail : Fragment(), GetImageTask.ImageConsumer {
 
 
-    private var id : String? = null
-    private lateinit var rootView : View
-
+    private var id: String? = null
+    private lateinit var rootView: View
 
 
     override fun onImageLoaded(pic: Bitmap?) {
-        Log.d(Constants.TAG,"bitmap: " + pic.toString())
+        Log.d(Constants.TAG, "bitmap: " + pic.toString())
         rootView.photo.setImageBitmap(pic)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {bundle->
+        arguments?.let { bundle ->
             id = bundle.getString(ARG_ID)
         }
     }
@@ -59,14 +60,14 @@ class PicDetail : Fragment(),GetImageTask.ImageConsumer {
     ): View? {
         activity!!.fab.hide()
         rootView = inflater.inflate(R.layout.fragment_pic_detail, container, false)
-        FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION).document(id!!).get().addOnSuccessListener{
-                documentSnapshot: DocumentSnapshot ->
-            val pic = Pic.fromSnapshot(documentSnapshot)
-            Log.d("!!!", pic.toString())
-            rootView.title.text = pic.name
-            Picasso.with(context).load(pic.url).into(rootView.photo)
+        FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION).document(id!!).get()
+            .addOnSuccessListener { documentSnapshot: DocumentSnapshot ->
+                val pic = Pic.fromSnapshot(documentSnapshot)
+                Log.d("!!!", pic.toString())
+                rootView.title.text = pic.name
+                Picasso.with(context).load(pic.url).into(rootView.photo)
 //            GetImageTask(this).execute(pic.url)
-        }
+            }
 
         return rootView
     }
@@ -82,7 +83,7 @@ class PicDetail : Fragment(),GetImageTask.ImageConsumer {
          */
         // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(id : String) =
+        fun newInstance(id: String) =
             PicDetail().apply {
                 arguments = Bundle().apply {
                     putString(ARG_ID, id)

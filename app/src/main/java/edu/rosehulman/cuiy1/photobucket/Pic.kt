@@ -7,12 +7,16 @@ import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.ServerTimestamp
 
 
-data class Pic(var name : String = " ", var url : String = " ") {
+data class Pic(var name: String = " ", var url: String = " ") {
 
-    @ServerTimestamp var timestamp : Timestamp? = null
-    @get:Exclude var id = ""
+    @ServerTimestamp
+    var timestamp: Timestamp? = null
+    @get:Exclude
+    var id = ""
+
     companion object {
-        fun fromSnapshot(snapshot: DocumentSnapshot) : Pic{
+        const val TIMESTAMP = "timestamp"
+        fun fromSnapshot(snapshot: DocumentSnapshot): Pic {
             Log.d("!!!", snapshot.data.toString())
             val pic = snapshot.toObject(Pic::class.java)!!
             pic.id = snapshot.id

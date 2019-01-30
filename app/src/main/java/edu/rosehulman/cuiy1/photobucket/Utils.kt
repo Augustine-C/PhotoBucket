@@ -1,7 +1,7 @@
 package edu.rosehulman.cuiy1.photobucket
 
 object Utils {
-    lateinit var title : String
+    lateinit var title: String
     fun randomImageUrl(): String {
         val urls = arrayOf(
             "http://b218.photo.store.qq.com/psb?/598748a4-68db-4a41-8cf2-0db9b2375c34/sQBfc6f3vvrEfD5yu3REjzJ51KqjFF2hWSkWRLJBano!/b/dNoAAAAAAAAA&bo=YAlABmAVQA4RByQ!&rf=viewer_4",

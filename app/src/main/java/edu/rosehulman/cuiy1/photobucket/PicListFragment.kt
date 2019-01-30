@@ -9,6 +9,7 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.firebase.ui.auth.AuthUI
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -16,6 +17,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_ID = "ARG_ID"
 private const val ARG_PARAM2 = "param2"
+private const val ARG_UID = "UID"
 
 /**
  * A simple [Fragment] subclass.
@@ -28,15 +30,19 @@ private const val ARG_PARAM2 = "param2"
  */
 class PicListFragment : Fragment() {
     // TODO: Rename and change types of parameters
-//    private var param2: String? = null
     private var listener: OnPicSelectedListener? = null
-    var adapter : PiclistAdapter? = null
-//    var recyclerView : RecyclerView? = null
+    var adapter: PiclistAdapter? = null
+    private var uid: String? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
-        adapter = PiclistAdapter(activity!!, listener)
+
+        arguments?.let {
+            uid = it.getString(ARG_UID)
+        }
+        adapter = PiclistAdapter(activity!!, listener, uid!!)
         adapter?.addSnapshotListener()
 
     }
@@ -81,9 +87,10 @@ class PicListFragment : Fragment() {
 //        adapter?.removeSnapshotListener()
     }
 
-    fun onButtonPressed(id : String) {
+    fun onButtonPressed(id: String) {
         listener?.onPicSelected(id)
     }
+
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -112,5 +119,15 @@ class PicListFragment : Fragment() {
      */
     interface OnPicSelectedListener {
         fun onPicSelected(id: String)
+    }
+
+    companion object {
+        @JvmStatic
+        fun newInstance(uid: String) =
+            PicListFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_UID, uid)
+                }
+            }
     }
 }

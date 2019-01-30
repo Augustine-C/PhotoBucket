@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
+import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
@@ -17,18 +18,21 @@ import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_edit_dialog.view.*
 
-class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
+class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener,
+    SplashFragment.OnLoginButtonPressedListener {
 
 
-    private lateinit var adapter : PiclistAdapter
+    private lateinit var adapter: PiclistAdapter
     private val picListRef = FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION)
     private lateinit var picListFragment: Fragment
     private val titleRef = FirebaseFirestore.getInstance().collection(Constants.TITLE)
     val auth = FirebaseAuth.getInstance()
     lateinit var authListener: FirebaseAuth.AuthStateListener
+    // Request code for launching the sign in Intent.
+    private val RC_SIGN_IN = 1
 
 
-    private fun updateAppTitle(){
+    private fun updateAppTitle() {
 
         val builder = AlertDialog.Builder(this)
         builder.setTitle("App's Title")
@@ -36,8 +40,8 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
         autoEditText.setText(title)
         autoEditText.hint = "add a title"
         builder.setView(autoEditText)
-        builder.setPositiveButton("ok"){_,_->
-            titleRef.document(Constants.TITLE).set(mapOf(Pair(Constants.TITLE,autoEditText.text.toString())))
+        builder.setPositiveButton("ok") { _, _ ->
+            titleRef.document(Constants.TITLE).set(mapOf(Pair(Constants.TITLE, autoEditText.text.toString())))
             Utils.title = autoEditText.text.toString()
         }
         builder.create().show()
@@ -48,22 +52,32 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        titleRef.addSnapshotListener{snapshot : QuerySnapshot?, firebaseFirestoreException ->
-            if(firebaseFirestoreException != null){
+        authListener = FirebaseAuth.AuthStateListener { auth: FirebaseAuth ->
+            val user = auth.currentUser
+            if (user == null) {
+                switchToSplashFragment()
+            } else {
+                switchToMovieQuoteFragment(user.uid)
+            }
+        }
+
+
+        titleRef.addSnapshotListener { snapshot: QuerySnapshot?, firebaseFirestoreException ->
+            if (firebaseFirestoreException != null) {
                 Log.w(Constants.TAG, "Firebase Error: $firebaseFirestoreException")
                 return@addSnapshotListener
             }
-            for(documentChange in snapshot!!.documentChanges){
-                val title = (documentChange.document.get(Constants.TITLE)?: " ") as String
-                when (documentChange.type){
+            for (documentChange in snapshot!!.documentChanges) {
+                val title = (documentChange.document.get(Constants.TITLE) ?: " ") as String
+                when (documentChange.type) {
                     DocumentChange.Type.MODIFIED -> {
-                        Log.d("!!!","MODIFY")
+                        Log.d("!!!", "MODIFY")
                         this.title = title
                         Utils.title = title
 
                     }
                     DocumentChange.Type.ADDED -> {
-                        Log.d("!!!","ADDED TITLE")
+                        Log.d("!!!", "ADDED TITLE")
                         this.title = title
                         Utils.title = title
                     }
@@ -72,7 +86,7 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
 
         }
 
-        if(savedInstanceState == null) {
+        if (savedInstanceState == null) {
             picListFragment = PicListFragment()
             val ft = supportFragmentManager.beginTransaction()
             ft.replace(R.id.fragment_holder, picListFragment)
@@ -80,11 +94,23 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
             ft.commit()
         }
         fab.show()
-        fab.setOnClickListener {_ ->
-            Log.d("!!!","add clicked")
+        fab.setOnClickListener { _ ->
+            Log.d("!!!", "add clicked")
             showAddDialog()
         }
 
+    }
+
+    private fun switchToSplashFragment() {
+        val ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.fragment_holder, SplashFragment())
+        ft.commit()
+    }
+
+    private fun switchToMovieQuoteFragment(uid: String) {
+        val ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.fragment_holder, PicListFragment.newInstance(uid))
+        ft.commit()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -112,7 +138,7 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
     override fun onPicSelected(id: String) {
         fab.hide()
         val ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.fragment_holder,PicDetail.newInstance(id), "info")
+        ft.replace(R.id.fragment_holder, PicDetail.newInstance(id), "info")
         ft.addToBackStack("list")
         ft.commit()
     }
@@ -120,19 +146,47 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
     fun showAddDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Add a ${Utils.title}")
-        val view = LayoutInflater.from(this).inflate(R.layout.add_edit_dialog,null,false)
+        val view = LayoutInflater.from(this).inflate(R.layout.add_edit_dialog, null, false)
         builder.setView(view)
 
         builder.setPositiveButton(android.R.string.ok) { _, _ ->
             val title = view.add_dialog_pic_title.text.toString()
             var url = view.add_dialog_url.text.toString()
-            if(url == ""){
+            if (url == "") {
                 url = Utils.randomImageUrl()
             }
-            picListRef.add(Pic(title,url))
+            picListRef.add(Pic(title, url))
         }
-        builder.setNegativeButton(android.R.string.cancel,null)
+        builder.setNegativeButton(android.R.string.cancel, null)
         builder.create().show()
+    }
+
+    override fun onLoginButtonPressed() {
+        launchLoginUI()
+    }
+
+    private fun launchLoginUI() {
+        // DONE: Build a login intent and startActivityForResult(intent, ...)
+        // For details, see https://firebase.google.com/docs/auth/android/firebaseui#sign_in
+
+        // Choose authentication providers
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.EmailBuilder().build(),
+            AuthUI.IdpConfig.PhoneBuilder().build(),
+            AuthUI.IdpConfig.GoogleBuilder().build()
+        )
+        val loginIntent = AuthUI.getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .setLogo(android.R.drawable.ic_menu_gallery)
+            .build()
+
+        // Create and launch sign-in intent
+        startActivityForResult(
+            loginIntent,
+            RC_SIGN_IN
+        )
+
     }
 
 }
