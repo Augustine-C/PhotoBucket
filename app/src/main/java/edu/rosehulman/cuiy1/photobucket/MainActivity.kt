@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -23,6 +24,9 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
     private val picListRef = FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION)
     private lateinit var picListFragment: Fragment
     private val titleRef = FirebaseFirestore.getInstance().collection(Constants.TITLE)
+    val auth = FirebaseAuth.getInstance()
+    lateinit var authListener: FirebaseAuth.AuthStateListener
+
 
     private fun updateAppTitle(){
 
@@ -96,6 +100,9 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
         return when (item.itemId) {
             R.id.set_title -> {
                 updateAppTitle()
+                true
+            }
+            R.id.show_user -> {
                 true
             }
             else -> super.onOptionsItemSelected(item)
