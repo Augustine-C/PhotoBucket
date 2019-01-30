@@ -6,4 +6,5 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="pic_title_hint">enter a title for your pic</string>
     <string name="pic_url_hint">enter the url for you pic</string>
+    <string name="edit_title">edit title</string>
 </resources>

@@ -8,8 +8,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
+import android.widget.EditText
+import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_edit_dialog.view.*
@@ -20,19 +22,60 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
     private lateinit var adapter : PiclistAdapter
     private val picListRef = FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION)
     private lateinit var picListFragment: Fragment
+    private val titleRef = FirebaseFirestore.getInstance().collection(Constants.TITLE)
+
+    private fun updateAppTitle(){
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("App's Title")
+        val autoEditText = EditText(this)
+        autoEditText.setText(title)
+        autoEditText.hint = "add a title"
+        builder.setView(autoEditText)
+        builder.setPositiveButton("ok"){_,_->
+            titleRef.document(Constants.TITLE).set(mapOf(Pair(Constants.TITLE,autoEditText.text.toString())))
+            Utils.title = autoEditText.text.toString()
+        }
+        builder.create().show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        if(savedInstanceState ==null) {
+        titleRef.addSnapshotListener{snapshot : QuerySnapshot?, firebaseFirestoreException ->
+            if(firebaseFirestoreException != null){
+                Log.w(Constants.TAG, "Firebase Error: $firebaseFirestoreException")
+                return@addSnapshotListener
+            }
+            for(documentChange in snapshot!!.documentChanges){
+                val title = (documentChange.document.get(Constants.TITLE)?: " ") as String
+                when (documentChange.type){
+                    DocumentChange.Type.MODIFIED -> {
+                        Log.d("!!!","MODIFY")
+                        this.title = title
+                        Utils.title = title
+
+                    }
+                    DocumentChange.Type.ADDED -> {
+                        Log.d("!!!","ADDED TITLE")
+                        this.title = title
+                        Utils.title = title
+                    }
+                }
+            }
+
+        }
+
+        if(savedInstanceState == null) {
             picListFragment = PicListFragment()
             val ft = supportFragmentManager.beginTransaction()
             ft.replace(R.id.fragment_holder, picListFragment)
-            fab.systemUiVisibility = View.VISIBLE
+            fab.show()
             ft.commit()
         }
+        fab.show()
         fab.setOnClickListener {_ ->
             Log.d("!!!","add clicked")
             showAddDialog()
@@ -51,12 +94,16 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.set_title -> {
+                updateAppTitle()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
     override fun onPicSelected(id: String) {
+        fab.hide()
         val ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.fragment_holder,PicDetail.newInstance(id), "info")
         ft.addToBackStack("list")
@@ -65,7 +112,7 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener{
 
     fun showAddDialog() {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Add a pic")
+        builder.setTitle("Add a ${Utils.title}")
         val view = LayoutInflater.from(this).inflate(R.layout.add_edit_dialog,null,false)
         builder.setView(view)
 

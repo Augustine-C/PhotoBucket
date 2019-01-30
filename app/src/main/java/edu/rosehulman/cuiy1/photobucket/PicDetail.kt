@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,6 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_pic_detail.view.*
 
 
@@ -45,17 +48,24 @@ class PicDetail : Fragment(),GetImageTask.ImageConsumer {
         }
     }
 
+    override fun onStop() {
+        activity!!.fab.show()
+        super.onStop()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        activity!!.fab.hide()
         rootView = inflater.inflate(R.layout.fragment_pic_detail, container, false)
         FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION).document(id!!).get().addOnSuccessListener{
                 documentSnapshot: DocumentSnapshot ->
             val pic = Pic.fromSnapshot(documentSnapshot)
             Log.d("!!!", pic.toString())
             rootView.title.text = pic.name
-            GetImageTask(this).execute(pic.url)
+            Picasso.with(context).load(pic.url).into(rootView.photo)
+//            GetImageTask(this).execute(pic.url)
         }
 
         return rootView

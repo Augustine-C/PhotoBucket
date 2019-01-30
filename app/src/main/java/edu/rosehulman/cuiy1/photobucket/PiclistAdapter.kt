@@ -87,7 +87,7 @@ class PiclistAdapter(
 
     fun showEditDialog(pos : Int) {
         val builder = AlertDialog.Builder(context)
-        builder.setTitle("Edit a pic")
+        builder.setTitle("Edit a ${Utils.title}")
         val view = LayoutInflater.from(context).inflate(R.layout.add_edit_dialog,null,false)
         builder.setView(view)
         view.add_dialog_pic_title.setText(picList[pos].name)
