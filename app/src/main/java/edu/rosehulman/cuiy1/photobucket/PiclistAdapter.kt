@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -15,15 +16,13 @@ import kotlinx.android.synthetic.main.add_edit_dialog.view.*
 class PiclistAdapter(
     val context: Context,
     val listener: PicListFragment.OnPicSelectedListener?,
-    uid: String
+    val uid: String
 ) : RecyclerView.Adapter<PicViewHolder>() {
 
     lateinit var registration: ListenerRegistration
     var picList = ArrayList<Pic>()
     var picListRef = FirebaseFirestore
         .getInstance()
-        .collection(Constants.USERS_COLLECTION)
-        .document(uid)
         .collection(Constants.PIC_COLLECTION)
 
 
@@ -88,24 +87,36 @@ class PiclistAdapter(
     }
 
     fun showEditDialog(pos: Int) {
-        val builder = AlertDialog.Builder(context)
-        builder.setTitle("Edit a ${Utils.title}")
-        val view = LayoutInflater.from(context).inflate(R.layout.add_edit_dialog, null, false)
-        builder.setView(view)
-        view.add_dialog_pic_title.setText(picList[pos].name)
-        view.add_dialog_url.setText(picList[pos].url)
-        builder.setPositiveButton(android.R.string.ok) { _, _ ->
-            val title = view.add_dialog_pic_title.text.toString()
-            val url = view.add_dialog_url.text.toString()
-            edit(pos, title, url)
-        }
+        if(uid != picList[pos].uid){
+            showDiffUser()
+        } else {
+            val builder = AlertDialog.Builder(context)
+            builder.setTitle("Edit a ${Utils.title}")
+            val view = LayoutInflater.from(context).inflate(R.layout.add_edit_dialog, null, false)
+            builder.setView(view)
+            view.add_dialog_pic_title.setText(picList[pos].name)
+            view.add_dialog_url.setText(picList[pos].url)
+            builder.setPositiveButton(android.R.string.ok) { _, _ ->
+                val title = view.add_dialog_pic_title.text.toString()
+                val url = view.add_dialog_url.text.toString()
+                edit(pos, title, url)
+            }
 
-        builder.setNegativeButton(android.R.string.cancel, null)
+            builder.setNegativeButton(android.R.string.cancel, null)
 
-        builder.setNeutralButton("Remove") { _, _ ->
-            remove(pos)
+            builder.setNeutralButton("Remove") { _, _ ->
+                remove(pos)
+            }
+            builder.create().show()
         }
-        builder.create().show()
+    }
+
+    fun showDiffUser(){
+        Toast.makeText(context,
+            "This pic belongs to another user",
+            Toast.LENGTH_LONG
+        ).show()
+
     }
 
     fun remove(pos: Int) {

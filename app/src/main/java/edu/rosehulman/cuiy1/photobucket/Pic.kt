@@ -7,7 +7,7 @@ import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.ServerTimestamp
 
 
-data class Pic(var name: String = " ", var url: String = " ") {
+data class Pic(var name: String = " ", var url: String = " ",var uid : String = " ") {
 
     @ServerTimestamp
     var timestamp: Timestamp? = null

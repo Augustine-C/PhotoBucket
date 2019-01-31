@@ -61,7 +61,7 @@ class PicListFragment : Fragment() {
         val mIth = ItemTouchHelper(
             object : ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-                ItemTouchHelper.RIGHT
+                ItemTouchHelper.RIGHT or ItemTouchHelper.LEFT
             ) {
                 override fun onMove(
                     recyclerView: RecyclerView,
@@ -74,7 +74,13 @@ class PicListFragment : Fragment() {
                 }
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                    adapter?.remove(viewHolder.adapterPosition)
+                    if (uid == adapter!!.picList[viewHolder.adapterPosition].uid){
+                        adapter?.remove(viewHolder.adapterPosition)
+                    } else {
+                        adapter?.showDiffUser()
+//                        adapter?.notifyItemChanged(viewHolder.adapterPosition)
+//                        adapter?.remove(viewHolder.adapterPosition)
+                    }
                 }
             })
         mIth.attachToRecyclerView(recyclerView)
@@ -119,6 +125,10 @@ class PicListFragment : Fragment() {
      */
     interface OnPicSelectedListener {
         fun onPicSelected(id: String)
+    }
+
+    interface OnShowUserSelectedListener{
+        fun onShowUserSelected()
     }
 
     companion object {

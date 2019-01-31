@@ -8,25 +8,26 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Button
 import android.widget.EditText
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
-
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_edit_dialog.view.*
 
 class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener,
     SplashFragment.OnLoginButtonPressedListener {
 
-
+    private var isShowAll  = true
     private lateinit var adapter: PiclistAdapter
     private val picListRef = FirebaseFirestore.getInstance().collection(Constants.PIC_COLLECTION)
     private lateinit var picListFragment: Fragment
     private val titleRef = FirebaseFirestore.getInstance().collection(Constants.TITLE)
     val auth = FirebaseAuth.getInstance()
+    lateinit var uid : String
     lateinit var authListener: FirebaseAuth.AuthStateListener
     // Request code for launching the sign in Intent.
     private val RC_SIGN_IN = 1
@@ -57,7 +58,8 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener,
             if (user == null) {
                 switchToSplashFragment()
             } else {
-                switchToMovieQuoteFragment(user.uid)
+                uid = user.uid
+                switchToPicListFragment(user.uid)
             }
         }
 
@@ -107,7 +109,7 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener,
         ft.commit()
     }
 
-    private fun switchToMovieQuoteFragment(uid: String) {
+    private fun switchToPicListFragment(uid: String) {
         val ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.fragment_holder, PicListFragment.newInstance(uid))
         ft.commit()
@@ -129,6 +131,12 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener,
                 true
             }
             R.id.show_user -> {
+                isShowAll = !isShowAll
+                if(isShowAll){
+                    this.findViewById<Button>(R.id.show_user).text = "SHOW ALL"
+                } else {
+                    this.findViewById<Button>(R.id.show_user).text = "SHOW MINE"
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -155,7 +163,7 @@ class MainActivity : AppCompatActivity(), PicListFragment.OnPicSelectedListener,
             if (url == "") {
                 url = Utils.randomImageUrl()
             }
-            picListRef.add(Pic(title, url))
+            picListRef.add(Pic(title,url,uid))
         }
         builder.setNegativeButton(android.R.string.cancel, null)
         builder.create().show()
